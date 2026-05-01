@@ -1,284 +1,128 @@
-# SPEC.md — MusicSync Pro: Finish & Launch (AI Integration)
+# SPEC.md — Music/Booking SaaS Finish & Launch
 
-**Job:** [Upwork Full Stack Product Engineer SaaS](https://www.upwork.com/jobs/Full-Stack-Product-Engineer-SaaS-Finish-Launch-Integration_~022045380585946756818)
-**Budget:** $25–47/hr | **Duration:** 3–6 months initial + ongoing | **Type:** Contract-to-hire
-**Client:** Music/Booking SaaS (Gold Coast, Australia)
-**GitHub:** https://github.com/9KMan/JOB-20260419060057-1ba703
+## 1. Concept & Vision
 
----
-
-## 1. Project Overview
-
-**Product:** Music/booking SaaS platform — ~70% built, needs to finish core features, stabilize, launch, then ongoing development.
-**Goal:** Finish and launch MVP, then continue with weekly sprints with a Product Manager.
-**Start:** Immediately
-**Team:** You + Product Manager (async, weekly sprints)
+A SaaS platform in the music/booking space, ~70% built, needing a full-stack engineer to finish core features, stabilize, launch, and continue ongoing development. Not a chatbot project — a real product with booking/scheduling workflows, AI-driven automation, and weekly sprint delivery. The product serves music industry clients with real booking and scheduling needs.
 
 ---
 
-## 2. Technical Stack
+## 2. Product Scope
 
-| Layer       | Technology |
-|-------------|------------|
-| Frontend    | Next.js (React), Tailwind CSS |
-| Backend     | Node.js |
-| Database    | PostgreSQL (primary), Redis (cache/sessions) |
-| AI/ML       | OpenAI GPT-4, Claude API (practical integrations) |
-| Auth        | NextAuth.js (Google, email) |
-| Deployment  | Docker, Docker Compose |
-| API         | REST + Webhooks |
+### Core Features to Complete
+1. **User Authentication & Authorization** — Sign-up, login, role-based access (admin, performer, venue, attendee)
+2. **Booking Management** — Create, approve, reject, and manage booking requests; calendar view; status tracking
+3. **Scheduling System** — Time slot management; conflict detection; calendar integration
+4. **Communication Workflow** — In-app messaging or notification system for booking status updates
+5. **AI-Driven Automation** (key differentiator):
+   - Parse booking inquiry inputs (natural language → structured data)
+   - Automate routine confirmation/rejection workflows
+   - Generate useful outputs (availability suggestions, conflict alerts, summary reports)
+6. **Payment Integration** (Phase 2 post-launch)
 
----
-
-## 3. Architecture
-
-```
-┌──────────────┐     ┌──────────────┐     ┌──────────────┐
-│   Next.js    │────▶│  Node.js API  │────▶│  PostgreSQL  │
-│   Frontend   │◀────│   Server     │◀────│              │
-└──────────────┘     └──────────────┘     └──────────────┘
-                            │                    │
-                            ▼                    ▼
-                     ┌──────────────┐     ┌──────────────┐
-                     │  AI Service  │     │  Redis       │
-                     │  (GPT-4 /    │     │  Sessions /  │
-                     │   Claude)    │     │  Cache       │
-                     └──────────────┘     └──────────────┘
-```
+### Existing Codebase (~70% built)
+- Frontend: React/Next.js (framework confirmed)
+- Backend: Node.js
+- Database: Not specified — audit required
+- Auth: Not specified — audit required
+- Existing features: Unknown — code review required
 
 ---
 
-## 4. Core Features
+## 3. Technical Architecture
 
-### 4.1 Booking & Scheduling (Core)
-- Multi-resource booking (musicians, venues, equipment)
-- Calendar integration (Google Calendar, iCal)
-- Time slot availability engine (no double-booking)
-- Booking confirmation + reminder emails (Resend/SendGrid)
-- Cancellation + rescheduling flow
-- Recurring bookings
+### Stack
+- **Frontend:** Next.js, React
+- **Backend:** Node.js (Express or similar)
+- **Database:** PostgreSQL recommended (need to confirm with client)
+- **Auth:** NextAuth.js or similar
+- **AI:** OpenAI API / Claude API for LLM features
+- **Deployment:** Vercel (frontend) + Railway/Render (backend)
+- **Scheduling:** Custom calendar or Cal.com integration
+- **Notifications:** SendGrid or Resend for email
 
-### 4.2 User Management
-- Email/password + OAuth (Google)
-- Role-based access: Admin, Organizer, Artist, Client
-- User profiles with media (avatars, bios, portfolios)
-- Team/organization support
-
-### 4.3 Communication
-- In-app messaging (real-time: Socket.io)
-- Email notifications (booking updates, reminders)
-- Webhook integrations for third-party tools
-
-### 4.4 AI Features (Practical — Required)
-
-#### AI Booking Assistant
-- Natural language parsing: "Book jazz duo for Friday 7pm for 50 people" → structured booking
-- AI-generated booking summaries for admins
-- Smart availability suggestions
-
-#### AI Workflow Automation
-- Auto-generate client proposals from booking details
-- AI-powered follow-up messages (personalized, not spam)
-- Auto-tag and categorize bookings by type/mood/genre
-
-#### AI Content Generation
-- Generate event descriptions from booking inputs
-- AI assistance for pricing suggestions based on market data
-- Automated thank-you / review request messages post-event
-
-### 4.5 Dashboard & Reporting
-- Booking volume, revenue, trends
-- Occupancy rate by resource/artist
-- Cancellation rate
-- AI-generated weekly summary reports
-
-### 4.6 Payments (Post-Launch)
-- Stripe integration (hourly or fixed weekly billing)
-- Invoice generation
-- Refund handling
-
----
-
-## 5. Database Schema
-
-### Users
+### Data Model (Draft)
 ```
-id, email, password_hash, name, role, avatar_url,
-phone, timezone, created_at, updated_at
+Users: id, email, password_hash, role, name, created_at
+Venues: id, user_id, name, address, capacity, amenities
+Performers: id, user_id, genre, bio, availability
+Bookings: id, venue_id, performer_id, requested_date, status, notes, created_at
+Messages: id, booking_id, sender_id, content, created_at
+AI_Parse_Logs: id, booking_id, input_text, parsed_data, created_at
 ```
 
-### Organizations
+### API Endpoints
 ```
-id, name, owner_id, plan, settings_json, created_at
-```
-
-### Resources (Artists, Venues, Equipment)
-```
-id, org_id, name, type, description, hourly_rate,
-availability_rules_json, media_urls[], active, created_at
-```
-
-### Bookings
-```
-id, org_id, resource_id, client_id, Booker_id,
-title, start_time, end_time, status (pending/confirmed/cancelled),
-party_size, notes, ai_summary, created_at, updated_at
-```
-
-### Messages
-```
-id, conversation_id, sender_id, content, read, created_at
-```
-
-### AI Interaction Logs
-```
-id, user_id, action, input_text, output_text, model,
-tokens_used, cost_usd, created_at
+POST   /api/auth/register
+POST   /api/auth/login
+GET    /api/users/me
+GET    /api/venues
+POST   /api/venues
+GET    /api/performers
+POST   /api/performers
+GET    /api/bookings
+POST   /api/bookings
+PATCH  /api/bookings/:id
+DELETE /api/bookings/:id
+GET    /api/bookings/:id/messages
+POST   /api/bookings/:id/messages
+POST   /api/ai/parse-booking-inquiry
+GET    /api/calendar/slots?date=
+POST   /api/ai/suggest-availability
 ```
 
 ---
 
-## 6. API Endpoints
+## 4. Build Phases
 
-### Auth
-- `POST /api/auth/register`
-- `POST /api/auth/login`
-- `GET /api/auth/me`
-- `POST /api/auth/oauth/google`
+### Phase 1: Audit & Stabilization (Week 1)
+- Clone existing codebase and run locally
+- Audit current architecture, DB schema, auth system
+- Identify broken/incomplete features
+- Fix critical bugs blocking basic flows
+- Set up CI/CD if missing
 
-### Bookings
-- `GET /api/bookings` — List (filter by date, resource, status)
-- `POST /api/bookings` — Create (with AI parsing)
-- `GET /api/bookings/:id`
-- `PUT /api/bookings/:id` — Update status, time, notes
-- `DELETE /api/bookings/:id` — Cancel
-- `POST /api/bookings/:id/ai-suggest` — AI availability suggestions
+### Phase 2: Core Features (Weeks 2-4)
+- Complete user auth flows
+- Finish booking CRUD
+- Implement scheduling system
+- Build communication/notifications
 
-### Resources
-- `GET /api/resources` — List org resources
-- `POST /api/resources` — Create
-- `PUT /api/resources/:id` — Update
-- `DELETE /api/resources/:id`
-- `GET /api/resources/:id/availability` — Available slots
+### Phase 3: AI Features (Weeks 4-6)
+- Integrate OpenAI/Claude API
+- Build booking inquiry parser
+- Automate confirmation workflows
+- Add availability suggestions
 
-### AI
-- `POST /api/ai/parse-booking` — NL → structured booking
-- `POST /api/ai/generate-proposal` — Booking → proposal draft
-- `POST /api/ai/summarize` — Booking → AI summary
-- `POST /api/ai/follow-up` — Generate follow-up message
+### Phase 4: Launch Prep (Weeks 6-8)
+- Testing (unit + E2E)
+- Performance optimization
+- Mobile responsiveness
+- Launch checklist
 
-### Messages
-- `GET /api/messages` — List conversations
-- `POST /api/messages` — Send message
-
-### Admin
-- `GET /api/admin/dashboard` — Stats (bookings, revenue, occupancy)
-- `GET /api/admin/reports/weekly` — AI-generated weekly report
+### Phase 5: Ongoing (Post-launch)
+- New features based on user feedback
+- Payment integration
+- Analytics dashboard
 
 ---
 
-## 7. AI Implementation Details
+## 5. Key Assumptions & Open Questions
 
-### OpenAI GPT-4 — Booking Parser
-```
-Input: "Book the jazz quartet for our wedding reception on March 15, 7pm to 11pm, about 80 guests"
-Output: { resource_type: "jazz-quartet", date: "2026-03-15", start: "19:00", end: "23:00", party_size: 80 }
-```
-
-### Claude — Workflow Automation
-- Proposal generation: booking details → formatted proposal document
-- Follow-up messages: personalized, context-aware, compliant
-
-### Prompt Engineering
-- System prompts define tone: professional, warm, concise
-- All AI outputs are editable before sending
-- Cost tracking per AI call
+1. **Database stack** — Client has not specified PostgreSQL/MySQL/MongoDB. Must confirm.
+2. **Existing codebase quality** — 70% built by unknown developer.接手 risk is HIGH. Must audit before estimating.
+3. **Hosting** — Not specified. Recommend Vercel + Railway for simplicity.
+4. **AI provider** — Client mentioned OpenAI/Claude. Recommend OpenAI GPT-4o for parsing, Claude for generation.
+5. **Payment** — Phase 2. Stripe integration post-launch.
+6. **Client timezone** — Gold Coast, Australia (AEST, UTC+10). Weekly sprints likely overlap with early morning EU/US time windows.
 
 ---
 
-## 8. Deployment
+## 6. Risk Factors
 
-### Docker Compose (Development)
-```yaml
-services:
-  frontend: next.js dev server
-  backend: node.js + Express
-  postgres: PostgreSQL 15
-  redis: Redis 7
-  ai-service: Node.js + OpenAI SDK
-```
-
-### CI/CD (GitHub Actions)
-1. Push to `main` → build + test (Jest + Playwright)
-2. Run type-check (tsc)
-3. Deploy to Railway / Render / Fly.io
-
-### Environment Variables
-```
-DATABASE_URL, REDIS_URL, NEXTAUTH_SECRET,
-GOOGLE_CLIENT_ID, GOOGLE_CLIENT_SECRET,
-OPENAI_API_KEY, ANTHROPIC_API_KEY,
-STRIPE_SECRET_KEY,
-SENDGRID_API_KEY
-```
-
----
-
-## 9. Milestones (4–8 Week Launch Plan)
-
-| Milestone | Deliverable | Week |
-|-----------|-------------|------|
-| M1 Stabilize | Fix critical bugs, audit existing code, document gaps | 1 |
-| M2 Booking Flow | Finish booking flow end-to-end, payments | 2 |
-| M3 AI Features | Integrate GPT-4 parser, Claude automation | 3 |
-| M4 Communications | Messaging, email notifications, webhooks | 4 |
-| M5 Dashboard | Reporting, AI weekly summaries | 5 |
-| M6 Launch | Production deploy, Stripe billing, go-live | 6–8 |
-
----
-
-## 10. Testing
-
-| Type       | Tool         | Target |
-|------------|--------------|--------|
-| Unit       | Jest         | >80% backend |
-| Integration| Supertest    | All API endpoints |
-| E2E        | Playwright   | Booking flow, auth |
-| AI         | Eval harness | Parsing accuracy >90% |
-
-**Critical flows:**
-1. Register → Create booking → Receive confirmation
-2. NL booking input → AI parse → Structured booking
-3. Cancel booking → Refund trigger → Email confirmation
-4. Weekly report generation (AI)
-
----
-
-## 11. Documentation
-
-- [ ] `README.md` — Setup, architecture, local dev
-- [ ] `docs/API.md` — OpenAPI spec
-- [ ] `docs/AI_PROMPTS.md` — All AI prompt templates
-- [ ] `docs/BOOKING_FLOW.md` — End-to-end user journey
-- [ ] `docs/ONBOARDING.md` — PM handoff doc
-
----
-
-## 12. Risk Factors
-
-| Risk | Likelihood | Mitigation |
-|------|------------|------------|
-| Existing codebase debt | High | Audit first, budget 20% extra time |
-| AI cost overruns | Medium | Token budgets, cache common queries |
-| Scope creep | High | Weekly PM sprint planning, hard cutoffs |
-| Payment integration complexity | Medium | Stripe only post-launch, manual invoicing first |
-
----
-
-## 13. Nice-to-Have (Post-Launch)
-
-- Mobile app (React Native)
-- Multi-currency billing
-- Integration with Spotify/SoundCloud APIs
-- Waitlist management
-- AI booking recommendations ("Artists similar to X are available")
+| Risk | Likelihood | Impact | Mitigation |
+|------|-----------|--------|------------|
+| 接手烂尾代码 (inherited broken code) | HIGH | HIGH | Day 1 audit, clear scope document from client |
+| Missing DB/auth specs | MEDIUM | HIGH | Confirm in kickoff meeting |
+| Client communication gaps (timezone) | MEDIUM | MEDIUM | Async-first, Loom video updates |
+| AI feature scope creep | MEDIUM | MEDIUM | Strict MVP scope, defer complex features |
+| 70% codebase may have security issues | MEDIUM | HIGH | Full security audit in Phase 1 |
