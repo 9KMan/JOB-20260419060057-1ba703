@@ -1,128 +1,163 @@
-# SPEC.md — Music/Booking SaaS Finish & Launch
+# Specification: Music/Booking SaaS — Finish & Launch
 
-## 1. Concept & Vision
+## 1. Project Overview
 
-A SaaS platform in the music/booking space, ~70% built, needing a full-stack engineer to finish core features, stabilize, launch, and continue ongoing development. Not a chatbot project — a real product with booking/scheduling workflows, AI-driven automation, and weekly sprint delivery. The product serves music industry clients with real booking and scheduling needs.
-
----
-
-## 2. Product Scope
-
-### Core Features to Complete
-1. **User Authentication & Authorization** — Sign-up, login, role-based access (admin, performer, venue, attendee)
-2. **Booking Management** — Create, approve, reject, and manage booking requests; calendar view; status tracking
-3. **Scheduling System** — Time slot management; conflict detection; calendar integration
-4. **Communication Workflow** — In-app messaging or notification system for booking status updates
-5. **AI-Driven Automation** (key differentiator):
-   - Parse booking inquiry inputs (natural language → structured data)
-   - Automate routine confirmation/rejection workflows
-   - Generate useful outputs (availability suggestions, conflict alerts, summary reports)
-6. **Payment Integration** (Phase 2 post-launch)
-
-### Existing Codebase (~70% built)
-- Frontend: React/Next.js (framework confirmed)
-- Backend: Node.js
-- Database: Not specified — audit required
-- Auth: Not specified — audit required
-- Existing features: Unknown — code review required
+**Project:** Music/Booking SaaS — Finish & Launch
+**Type:** Full-stack SaaS (B2B / marketplace-adjacent)
+**Core Functionality:** Booking and scheduling platform for music industry — managing venue bookings, performer scheduling, AI-driven automation for booking workflows, and communication
+**Target Users:** Music venues, booking agents, performers, and event managers
+**Current Status:** ~70% built. Existing codebase needs completion, stabilization, and launch.
 
 ---
 
-## 3. Technical Architecture
+## 2. Technical Stack
 
-### Stack
-- **Frontend:** Next.js, React
-- **Backend:** Node.js (Express or similar)
-- **Database:** PostgreSQL recommended (need to confirm with client)
-- **Auth:** NextAuth.js or similar
-- **AI:** OpenAI API / Claude API for LLM features
-- **Deployment:** Vercel (frontend) + Railway/Render (backend)
-- **Scheduling:** Custom calendar or Cal.com integration
-- **Notifications:** SendGrid or Resend for email
+| Component | Technology |
+|-----------|------------|
+| **Frontend** | Next.js (App Router), React 18, TypeScript, Tailwind CSS |
+| **Backend** | Node.js (Express or similar) |
+| **Database** | PostgreSQL (confirm with client) |
+| **Auth** | NextAuth.js or similar (role-based: admin, performer, venue) |
+| **AI** | OpenAI API + Claude API for LLM features (parsing, automation, summaries) |
+| **Scheduling** | Custom calendar engine or Cal.com API integration |
+| **Email** | SendGrid or Resend for transactional + notification emails |
+| **Deployment** | Vercel (frontend) + Railway/Render (backend) |
 
-### Data Model (Draft)
+---
+
+## 3. Core Features to Complete
+
+### 3.1 User Authentication & Authorization
+- Sign-up, login, email verification
+- Role-based access: admin, venue manager, performer, booking agent
+- JWT session management (httpOnly cookies)
+- Password reset flow
+
+### 3.2 Booking Management
+- Create, approve, reject, and manage booking requests
+- Calendar view for availability (performer and venue)
+- Conflict detection for double-booking
+- Status tracking: pending → approved → rejected → completed → cancelled
+- Booking notes and internal comments
+- Attachments support (contract uploads, rider documents)
+
+### 3.3 Scheduling System
+- Time slot management (blocked times, available times)
+- Calendar integration: display bookings on calendar view
+- Conflict alerts when scheduling overlapping events
+- Automated reminder notifications (email/SMS) before events
+- Recurring booking support (weekly/monthly slots)
+
+### 3.4 AI Features (LLM Integration)
+- **Booking Inquiry Parser:** Parse natural language booking requests into structured data (extract date, venue, performer, budget)
+- **Automated Routing:** Route booking requests to correct venue/performer based on genre, location, availability
+- **Auto-Confirmation Workflow:** AI-generated confirmation messages; auto-reply to booking inquiries
+- **Availability Suggestions:** AI suggests optimal time slots based on historical booking patterns
+- **Conflict Alerts:** AI-generated alerts for scheduling conflicts, availability gaps
+- **Summary Reports:** AI-generated daily/weekly booking summaries for admins
+
+### 3.5 Communication Workflow
+- In-app messaging between venues and performers
+- Notification system for booking status updates
+- Email notifications via SendGrid/Resend
+- Status change webhook notifications (Phase 2)
+
+### 3.6 Payment Integration (Phase 2 — post-launch)
+- Stripe for booking deposits
+- Invoice generation
+- Payment status tracking
+
+---
+
+## 4. Existing Codebase Assessment Required
+
+Before building, OpenCode agent MUST:
+1. Read and understand all existing code in the repository
+2. Identify: which features from the spec are already built, partially built, or missing
+3. Identify: tech stack decisions already made (ORM, auth library, component patterns)
+4. Create a gap analysis: what remains → this becomes the build spec
+
+**Gap analysis is mandatory before writing new code.**
+
+---
+
+## 5. Data Model (Draft — confirm with existing codebase)
+
 ```
-Users: id, email, password_hash, role, name, created_at
-Venues: id, user_id, name, address, capacity, amenities
-Performers: id, user_id, genre, bio, availability
-Bookings: id, venue_id, performer_id, requested_date, status, notes, created_at
-Messages: id, booking_id, sender_id, content, created_at
-AI_Parse_Logs: id, booking_id, input_text, parsed_data, created_at
-```
-
-### API Endpoints
-```
-POST   /api/auth/register
-POST   /api/auth/login
-GET    /api/users/me
-GET    /api/venues
-POST   /api/venues
-GET    /api/performers
-POST   /api/performers
-GET    /api/bookings
-POST   /api/bookings
-PATCH  /api/bookings/:id
-DELETE /api/bookings/:id
-GET    /api/bookings/:id/messages
-POST   /api/bookings/:id/messages
-POST   /api/ai/parse-booking-inquiry
-GET    /api/calendar/slots?date=
-POST   /api/ai/suggest-availability
+Users:         id, email, password_hash, name, role (ENUM: admin, venue, performer, agent), phone, created_at
+Venues:        id, name, address, capacity, genre_focus, contact_email, created_at
+Performers:    id, user_id, name, genre, bio, availability_notes, created_at
+Bookings:      id, venue_id, performer_id, requested_date, start_time, end_time, status (ENUM: pending, approved, rejected, completed, cancelled), notes, created_at, updated_at
+Messages:      id, booking_id, sender_id, body, sent_at
+Notifications: id, user_id, type, message, read (BOOLEAN), created_at
 ```
 
 ---
 
-## 4. Build Phases
+## 6. File Structure (Standard Next.js Full-Stack)
 
-### Phase 1: Audit & Stabilization (Week 1)
-- Clone existing codebase and run locally
-- Audit current architecture, DB schema, auth system
-- Identify broken/incomplete features
-- Fix critical bugs blocking basic flows
-- Set up CI/CD if missing
-
-### Phase 2: Core Features (Weeks 2-4)
-- Complete user auth flows
-- Finish booking CRUD
-- Implement scheduling system
-- Build communication/notifications
-
-### Phase 3: AI Features (Weeks 4-6)
-- Integrate OpenAI/Claude API
-- Build booking inquiry parser
-- Automate confirmation workflows
-- Add availability suggestions
-
-### Phase 4: Launch Prep (Weeks 6-8)
-- Testing (unit + E2E)
-- Performance optimization
-- Mobile responsiveness
-- Launch checklist
-
-### Phase 5: Ongoing (Post-launch)
-- New features based on user feedback
-- Payment integration
-- Analytics dashboard
+```
+music-booking-saas/
+├── SPEC.md
+├── README.md
+├── package.json
+├── tsconfig.json
+├── .env.example
+├── prisma/
+│   └── schema.prisma              # or existing schema
+├── src/
+│   ├── app/
+│   │   ├── (auth)/               # auth routes (login, register, reset)
+│   │   ├── (dashboard)/          # protected routes
+│   │   │   ├── bookings/          # booking management
+│   │   │   ├── calendar/          # calendar/scheduling view
+│   │   │   ├── performers/        # performer profiles
+│   │   │   ├── venues/            # venue management
+│   │   │   └── admin/            # admin analytics
+│   │   └── api/
+│   │       ├── auth/
+│   │       ├── bookings/
+│   │       ├── calendar/
+│   │       ├── ai/               # OpenAI/Claude endpoints
+│   │       └── webhooks/
+│   ├── components/
+│   │   ├── ui/                   # shadcn/ui primitives
+│   │   ├── booking/              # booking-specific components
+│   │   └── calendar/             # calendar components
+│   ├── lib/
+│   │   ├── auth.ts
+│   │   ├── db.ts                 # Prisma client
+│   │   ├── openai.ts             # OpenAI client
+│   │   └── claude.ts             # Claude client
+│   └── services/
+│       ├── bookingService.ts
+│       ├── aiService.ts
+│       └── notificationService.ts
+└── tests/
+    ├── booking.test.ts
+    └── ai.test.ts
+```
 
 ---
 
-## 5. Key Assumptions & Open Questions
+## 7. Out of Scope
 
-1. **Database stack** — Client has not specified PostgreSQL/MySQL/MongoDB. Must confirm.
-2. **Existing codebase quality** — 70% built by unknown developer.接手 risk is HIGH. Must audit before estimating.
-3. **Hosting** — Not specified. Recommend Vercel + Railway for simplicity.
-4. **AI provider** — Client mentioned OpenAI/Claude. Recommend OpenAI GPT-4o for parsing, Claude for generation.
-5. **Payment** — Phase 2. Stripe integration post-launch.
-6. **Client timezone** — Gold Coast, Australia (AEST, UTC+10). Weekly sprints likely overlap with early morning EU/US time windows.
+- Mobile app (web only for MVP)
+- Payment processing (Phase 2 post-launch)
+- Social features / reviews
+- Analytics dashboard (Phase 2)
+- Multi-language support
 
 ---
 
-## 6. Risk Factors
+## 8. Delivery Checklist
 
-| Risk | Likelihood | Impact | Mitigation |
-|------|-----------|--------|------------|
-| 接手烂尾代码 (inherited broken code) | HIGH | HIGH | Day 1 audit, clear scope document from client |
-| Missing DB/auth specs | MEDIUM | HIGH | Confirm in kickoff meeting |
-| Client communication gaps (timezone) | MEDIUM | MEDIUM | Async-first, Loom video updates |
-| AI feature scope creep | MEDIUM | MEDIUM | Strict MVP scope, defer complex features |
-| 70% codebase may have security issues | MEDIUM | HIGH | Full security audit in Phase 1 |
+- [ ] GitHub repo assessed — gap analysis documented in README
+- [ ] Missing features from spec completed
+- [ ] AI features (LLM parsing, automation) functional
+- [ ] Calendar/scheduling working without conflicts
+- [ ] Auth + RBAC verified
+- [ ] Email notifications working
+- [ ] Production-ready deployment (Vercel + Railway)
+- [ ] No hardcoded secrets
+- [ ] README with setup + gap analysis documented
